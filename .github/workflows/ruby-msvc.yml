@@ -1,0 +1,77 @@
+name: Windows
+
+on: [push, pull_request]
+
+jobs:
+  make:
+    strategy:
+      matrix:
+        test_task: [test]
+        os: [windows-2019]
+        vs: [2019]
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+    if: "!contains(github.event.head_commit.message, '[ci skip]')"
+    steps:
+      - uses: actions/cache@v1
+        with:
+          path: C:\vcpkg\downloads
+          key: ${{ runner.os }}-vcpkg-download-${{ matrix.os }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-vcpkg-download-${{ matrix.os }}-
+            ${{ runner.os }}-vcpkg-download-
+      - name: Install libraries with vcpkg
+        run: |
+          vcpkg --triplet x64-windows install readline zlib
+      - uses: actions/cache@v1
+        with:
+          path: C:\Users\runneradmin\AppData\Local\Temp\chocolatey
+          key: ${{ runner.os }}-chocolatey-${{ matrix.os }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-chocolatey-${{ matrix.os }}-
+            ${{ runner.os }}-chocolatey-
+      - name: Install libraries with chocolatey
+        run: |
+          choco install --no-progress openssl winflexbison3
+      # Not using official actions/checkout because it's unstable and sometimes doesn't work for a fork.
+      - name: Checkout ruby/ruby
+        run: |
+          git clone --single-branch --shallow-since=yesterday https://github.com/MSP-Greg/ruby src
+      - run: ./src/tool/actions-commit-info.sh
+        shell: bash
+        id: commit_info
+      - name: Configure
+        run: |
+          md install
+          md build
+          cd build
+          call "C:\Program Files (x86)\Microsoft Visual Studio\${{ matrix.vs }}\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          ../src/win32/configure.bat --disable-install-doc --without-ext=+,dbm,gdbm --enable-bundled-libffi --with-opt-dir=C:/vcpkg/installed/x64-windows --with-openssl-dir="C:/Program Files/OpenSSL-Win64"
+        shell: cmd
+      - name: nmake
+        run: |
+          call "C:\Program Files (x86)\Microsoft Visual Studio\${{ matrix.vs }}\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          set YACC=win_bison
+          cd build
+          echo on
+          nmake up
+          nmake extract-gems
+          nmake
+        shell: cmd
+      - name: install
+        run: |
+          call "C:\Program Files (x86)\Microsoft Visual Studio\${{ matrix.vs }}\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          cd build
+          nmake install-nodoc
+        shell: cmd
+      - name: nmake test
+        run: |
+          call "C:\Program Files (x86)\Microsoft Visual Studio\${{ matrix.vs }}\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          cd build
+          nmake ${{ matrix.test_task }}
+        shell: cmd
+      - name: upload
+        uses: actions/upload-artifact@v1
+        with:
+          name: Ruby
+          path: /usr
