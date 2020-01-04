@@ -6,11 +6,11 @@ jobs:
   make:
     strategy:
       matrix:
-        test_task: [test]
-        os: [windows-2019]
         vs: [2019]
       fail-fast: false
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-2019
+    env:
+      zlib_version: "1.2.11"
     if: "!contains(github.event.head_commit.message, '[ci skip]')"
     steps:
       - uses: actions/cache@v1
@@ -22,7 +22,7 @@ jobs:
             ${{ runner.os }}-vcpkg-download-
       - name: Install libraries with vcpkg
         run: |
-          vcpkg --triplet x64-windows install readline zlib
+          vcpkg --triplet x64-windows install readline
       - uses: actions/cache@v1
         with:
           path: C:\Users\runneradmin\AppData\Local\Temp\chocolatey
@@ -33,45 +33,82 @@ jobs:
       - name: Install libraries with chocolatey
         run: |
           choco install --no-progress openssl winflexbison3
-      # Not using official actions/checkout because it's unstable and sometimes doesn't work for a fork.
-      - name: Checkout ruby/ruby
+      - name: git config
         run: |
-          git clone --single-branch --shallow-since=yesterday https://github.com/MSP-Greg/ruby src
+          git config --system core.autocrlf false
+          git config --system core.eol lf
+      - name: Checkout repo
+        uses: actions/checkout@v2
+        with:
+          path: src
       - run: ./src/tool/actions-commit-info.sh
         shell: bash
         id: commit_info
       - name: Configure
+        shell: cmd
         run: |
           md install
+          md temp
           md build
           cd build
           call "C:\Program Files (x86)\Microsoft Visual Studio\${{ matrix.vs }}\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
-          ../src/win32/configure.bat --disable-install-doc --without-ext=+,dbm,gdbm --enable-bundled-libffi --with-opt-dir=C:/vcpkg/installed/x64-windows --with-openssl-dir="C:/Program Files/OpenSSL-Win64"
+          ../src/win32/configure.bat --disable-install-doc --prefix=/install --without-ext=+,dbm,gdbm --enable-bundled-libffi --with-opt-dir=C:/vcpkg/installed/x64-windows --with-openssl-dir="C:/Program Files/OpenSSL-Win64"
+
+      - name: download unicode, gems, etc
         shell: cmd
+        run: |
+          curl -fsSL -o zlib%zlib_version:.=%.zip --retry 10 https://zlib.net/zlib%zlib_version:.=%.zip
+          "C:\Program Files\7-Zip\7z.exe" x -o%cd%\src\ext\zlib zlib%zlib_version:.=%.zip
+          call "C:\Program Files (x86)\Microsoft Visual Studio\${{ matrix.vs }}\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          cd build
+          nmake update-unicode
+          nmake update-gems
+          nmake up incs
+
       - name: nmake
+        shell: cmd
         run: |
           call "C:\Program Files (x86)\Microsoft Visual Studio\${{ matrix.vs }}\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
           set YACC=win_bison
-          cd build
           echo on
-          nmake up
-          nmake extract-gems
+          cd build
           nmake
+
+      - name: make install
         shell: cmd
-      - name: install
         run: |
+          set RD=%cd%
           call "C:\Program Files (x86)\Microsoft Visual Studio\${{ matrix.vs }}\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
           cd build
-          nmake install-nodoc
-        shell: cmd
+          nmake DESTDIR=%RD% install-nodoc
+
       - name: nmake test
-        run: |
-          call "C:\Program Files (x86)\Microsoft Visual Studio\${{ matrix.vs }}\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
-          cd build
-          nmake ${{ matrix.test_task }}
+        timeout-minutes: 4
         shell: cmd
+        run: |
+          set TMPDIR=%cd%\temp
+          cd build
+          call "C:\Program Files (x86)\Microsoft Visual Studio\${{ matrix.vs }}\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          nmake test
+
+      - name: test-spec from install
+        if: success() || failure()
+        timeout-minutes: 5
+        shell: cmd
+        run: |
+          set TMPDIR=%cd%\temp
+          copy C:\vcpkg\installed\x64-windows\bin\readline.dll %cd%\install\bin\
+          copy C:\Windows\System32\libcrypto-1_1-x64.dll       %cd%\install\bin\
+          copy C:\Windows\System32\libssl-1_1-x64.dll          %cd%\install\bin\
+          ruby -ropenssl -e "puts 'Build    ' + OpenSSL::OPENSSL_VERSION, 'Runtime  ' + OpenSSL::OPENSSL_LIBRARY_VERSION"
+          call "C:\Program Files (x86)\Microsoft Visual Studio\${{ matrix.vs }}\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          chcp 437
+          set PATH=%cd%\install\bin;%PATH%
+          cd src/spec/ruby
+          ruby ../mspec/bin/mspec -j
+
       - name: upload
         uses: actions/upload-artifact@v1
         with:
           name: Ruby
-          path: /usr
+          path: /install
