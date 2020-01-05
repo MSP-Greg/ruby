@@ -635,7 +635,7 @@ $(CONFIG_H): $(MKFILES) $(srcdir)/win32/Makefile.sub $(win_srcdir)/Makefile.sub
 #define SIZEOF_LONG_LONG 0
 !endif
 #define SIZEOF___INT64 8
-!if $(MSC_VER) >= 1910
+!if $(MSC_VER) < 1910
 #define _INTEGRAL_MAX_BITS 64
 !endif
 !if $(LARGEFILE_SUPPORT)

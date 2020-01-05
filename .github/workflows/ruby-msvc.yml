@@ -97,9 +97,9 @@ jobs:
         shell: cmd
         run: |
           set TMPDIR=%cd%\temp
-          copy C:\vcpkg\installed\x64-windows\bin\readline.dll %cd%\install\bin\
-          copy C:\Windows\System32\libcrypto-1_1-x64.dll       %cd%\install\bin\
-          copy C:\Windows\System32\libssl-1_1-x64.dll          %cd%\install\bin\
+          copy C:\vcpkg\installed\x64-windows\bin\readline.dll            %cd%\install\bin\
+          copy "C:\Program Files\OpenSSL-Win64\bin\libcrypto-1_1-x64.dll" %cd%\install\bin\
+          copy "C:\Program Files\OpenSSL-Win64\bin\libssl-1_1-x64.dll"    %cd%\install\bin\
           ruby -ropenssl -e "puts 'Build    ' + OpenSSL::OPENSSL_VERSION, 'Runtime  ' + OpenSSL::OPENSSL_LIBRARY_VERSION"
           call "C:\Program Files (x86)\Microsoft Visual Studio\${{ matrix.vs }}\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
           chcp 437
@@ -111,4 +111,4 @@ jobs:
         uses: actions/upload-artifact@v1
         with:
           name: Ruby
-          path: /install
+          path: install
