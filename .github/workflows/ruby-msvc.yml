@@ -100,15 +100,16 @@ jobs:
           copy C:\vcpkg\installed\x64-windows\bin\readline.dll            %cd%\install\bin\
           copy "C:\Program Files\OpenSSL-Win64\bin\libcrypto-1_1-x64.dll" %cd%\install\bin\
           copy "C:\Program Files\OpenSSL-Win64\bin\libssl-1_1-x64.dll"    %cd%\install\bin\
-          ruby -ropenssl -e "puts 'Build    ' + OpenSSL::OPENSSL_VERSION, 'Runtime  ' + OpenSSL::OPENSSL_LIBRARY_VERSION"
+          del install\lib\x64-vcruntime140-ruby280-static.lib
           call "C:\Program Files (x86)\Microsoft Visual Studio\${{ matrix.vs }}\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
           chcp 437
           set PATH=%cd%\install\bin;%PATH%
+          ruby -ropenssl -e "puts 'Build    ' + OpenSSL::OPENSSL_VERSION, 'Runtime  ' + OpenSSL::OPENSSL_LIBRARY_VERSION"
           cd src/spec/ruby
           ruby ../mspec/bin/mspec -j
 
       - name: upload
         uses: actions/upload-artifact@v1
         with:
-          name: Ruby
+          name: Ruby28-mswin64_140
           path: install
