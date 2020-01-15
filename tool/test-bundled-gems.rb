@@ -13,7 +13,14 @@ File.foreach("#{gem_dir}/bundled_gems") do |line|
 
   if gem.start_with?('rexml')
     dest = "#{gem_dir}/src/#{gem}/test/lib"
-#    File.delete "#{dest}/envutil.rb", "#{dest}/leakchecker.rb"
+
+STDOUT.puts "src  envutil.rb",     File.exist?("#{__dir__}/lib/envutil.rb")
+STDOUT.puts "src  leakchecker.rb", File.exist?("#{__dir__}/lib/leakchecker.rb")
+
+STDOUT.puts "dest envutil.rb",     File.exist?("#{dest}/envutil.rb")
+STDOUT.puts "dest leakchecker.rb", File.exist?("#{dest}/leakchecker.rb")
+
+    File.delete "#{dest}/envutil.rb", "#{dest}/leakchecker.rb"
     IO.copy_stream "#{__dir__}/lib/envutil.rb"    , "#{dest}/envutil.rb"
     IO.copy_stream "#{__dir__}/lib/leakchecker.rb", "#{dest}/leakchecker.rb"
   end
