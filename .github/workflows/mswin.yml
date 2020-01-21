@@ -138,13 +138,13 @@ jobs:
           copy "C:\Program Files\OpenSSL-Win64\bin\libssl-1_1-x64.dll"    %cd%\install\bin\
           set GIT=git.exe
           set /a JOBS=%NUMBER_OF_PROCESSORS%
-          set EXCL_N=--exclude test_syntax --exclude test_time_tz --exclude test_undef
+          set EXCL_N=--exclude test_syntax --exclude test_thread.rb --exclude test_time_tz --exclude test_undef
           set TMPDIR=%cd%\temp
           call %vc_setup%
           chcp 437
           set PATH=%cd%\install\bin;%PATH%;%PATH%
           cd build
-          nmake test-all "TESTOPTS=-j%JOBS% %EXCL_N% --timeout-scale=3.0 --retry --job-status=normal --show-skip"
+          nmake test-all "TESTOPTS=-j%JOBS% %EXCL_N% -v --timeout-scale=3.0 --retry --job-status=normal --show-skip"
 
       - name: nmake test-all singles
         timeout-minutes: 5
@@ -152,7 +152,7 @@ jobs:
         run: |
           set GIT=git.exe
           set tr=../src/test/ruby
-          set TESTS=%tr%/test_syntax.rb %tr%/test_undef.rb
+          set TESTS=%tr%/test_syntax.rb %tr%/test_thread.rb %tr%/test_undef.rb
           set TMPDIR=%cd%\temp
           call %vc_setup%
           chcp 437
