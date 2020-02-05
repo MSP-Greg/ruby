@@ -12,6 +12,8 @@
 
 require 'openssl.so'
 
+require_relative 'openssl/version'
+
 require_relative 'openssl/bn'
 require_relative 'openssl/pkey'
 require_relative 'openssl/cipher'
