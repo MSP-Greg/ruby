@@ -2009,7 +2009,6 @@ ossl_ssl_read(int argc, VALUE *argv, VALUE self)
 }
 
 /*
- * :nodoc:
  * call-seq:
  *    ssl.sysread_nonblock(length) => string
  *    ssl.sysread_nonblock(length, buffer) => buffer
@@ -2108,7 +2107,6 @@ ossl_ssl_write(VALUE self, VALUE str)
 }
 
 /*
- * :nodoc:
  * call-seq:
  *    ssl.syswrite_nonblock(string) => Integer
  *
@@ -2126,7 +2124,6 @@ ossl_ssl_write_nonblock(int argc, VALUE *argv, VALUE self)
 }
 
 /*
- * :nodoc:
  * call-seq:
  *    ssl.stop => nil
  *
@@ -2410,8 +2407,7 @@ ossl_ssl_get_finished(VALUE self)
 
     GetSSL(self, ssl);
 
-    char sizer[0];
-    size_t len = SSL_get_finished(ssl, sizer, 0);
+    size_t len = SSL_get_finished(ssl, NULL, 0);
     if(len == 0)
       return Qnil;
 
@@ -2435,8 +2431,7 @@ ossl_ssl_get_peer_finished(VALUE self)
 
     GetSSL(self, ssl);
 
-    char sizer[0];
-    size_t len = SSL_get_peer_finished(ssl, sizer, 0);
+    size_t len = SSL_get_peer_finished(ssl, NULL, 0);
     if(len == 0)
       return Qnil;
 
