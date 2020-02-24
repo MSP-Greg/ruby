@@ -1,3 +1,5 @@
+require_relative "lib/openssl/version"
+
 Gem::Specification.new do |spec|
   spec.name          = "openssl"
   spec.version       = "2.2.0"
