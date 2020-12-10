@@ -112,15 +112,12 @@ jobs:
 
       - name: test-spec
         timeout-minutes: 10
-        working-directory: src/spec/ruby
         run: |
-          $env:Path = "$pwd/../../../install/bin;$env:Path"
           # Actions uses UTF8, causes test failures, similar to normal OS setup
           $PSDefaultParameterValues['*:Encoding'] = 'utf8'
           [Console]::OutputEncoding = [System.Text.Encoding]::GetEncoding("IBM437")
           [Console]::InputEncoding  = [System.Text.Encoding]::GetEncoding("IBM437")
-          ruby -v
-          ruby -I../../tool/test ../mspec/bin/mspec -j
+          make test-spec -j
 
       - uses: k0kubun/action-slack@v2.0.0
         with:
