@@ -52,7 +52,7 @@ when /linux/
   end
 when /mingw/, /mswin/
   require "rbconfig"
-  crtname = RbConfig::CONFIG["RUBY_SO_NAME"][/msvc\w+/] || 'ucrtbase'
+  crtname = RbConfig::CONFIG["RUBY_SO_NAME"]
   libc_so = libm_so = "#{crtname}.dll"
 when /darwin/
   libc_so = libm_so = "/usr/lib/libSystem.B.dylib"
