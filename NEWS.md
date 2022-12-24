@@ -180,6 +180,7 @@ Note: We're only listing outstanding class updates.
         Measure = Data.define(:amount, :unit)
         distance = Measure.new(100, 'km')            #=> #<data Measure amount=100, unit="km">
         weight = Measure.new(amount: 50, unit: 'kg') #=> #<data Measure amount=50, unit="kg">
+        weight.with(amount: 40)                      #=> #<data Measure amount=40, unit="kg">
         weight.amount                                #=> 50
         weight.amount = 40                           #=> NoMethodError: undefined method `amount='
         ```
@@ -341,16 +342,16 @@ Note: We're only listing outstanding class updates.
 
 * Thread
 
-    * Thread#each_caller_location is added. [[Feature #16663]]
+    * Thread.each_caller_location is added. [[Feature #16663]]
 
 * Thread::Queue
 
-    * Thread::Queue.pop(timeout: sec) is added. [[Feature #18774]]
+    * Thread::Queue#pop(timeout: sec) is added. [[Feature #18774]]
 
 * Thread::SizedQueue
 
-    * Thread::SizedQueue.pop(timeout: sec) is added. [[Feature #18774]]
-    * Thread::SizedQueue.push(timeout: sec) is added. [[Feature #18944]]
+    * Thread::SizedQueue#pop(timeout: sec) is added. [[Feature #18774]]
+    * Thread::SizedQueue#push(timeout: sec) is added. [[Feature #18944]]
 
 * Time
 
@@ -369,8 +370,8 @@ Note: We're only listing outstanding class updates.
     * TracePoint#binding now returns `nil` for `c_call`/`c_return` TracePoints.
       [[Bug #18487]]
     * TracePoint#enable `target_thread` keyword argument now defaults to the
-      current thread if `target` and `target_line` keyword arguments are not
-      passed. [[Bug #16889]]
+      current thread if a block is given and `target` and `target_line` keyword
+      arguments are not passed. [[Bug #16889]]
 
 * UnboundMethod
 
@@ -432,7 +433,15 @@ Note: We're only listing outstanding class updates.
 
 * IRB
 
-    * Added many of new commands and improvements. see [ruby-3-2-irb]
+    * debug.gem integration commands have been added: `debug`, `break`, `catch`,
+      `next`, `delete`, `step`, `continue`, `finish`, `backtrace`, `info`
+        * They work even if you don't have `gem "debug"` in your Gemfile.
+        * See also: [ruby-3-2-irb]
+    * More Pry-like commands and features have been added.
+        * `edit` and `show_cmds` (like Pry's `help`) are added.
+        * `ls` takes `-g` or `-G` option to filter out outputs.
+        * `show_source` is aliased from `$` and accepts unquoted inputs.
+        * `whereami` is aliased from `@`.
 
 * Net::Protocol
 
@@ -500,14 +509,14 @@ Note: We're only listing outstanding class updates.
     * nkf 0.1.2
     * open-uri 0.3.0
     * open3 0.1.2
-    * openssl 3.1.0.pre
-    * optparse 0.3.0
+    * openssl 3.1.0
+    * optparse 0.3.1
     * ostruct 0.5.5
     * pathname 0.2.1
     * pp 0.4.0
     * pstore 0.1.2
     * psych 5.0.1
-    * racc 1.6.1
+    * racc 1.6.2
     * rdoc 6.5.0
     * readline-ext 0.1.5
     * reline 0.3.2
@@ -534,15 +543,17 @@ Note: We're only listing outstanding class updates.
 *   The following bundled gems are updated.
 
     * minitest 5.16.3
-    * power_assert 2.0.2
+    * power_assert 2.0.3
     * test-unit 3.5.7
     * net-ftp 0.2.0
-    * net-imap 0.3.2
+    * net-imap 0.3.4
     * net-pop 0.1.2
     * net-smtp 0.3.3
-    * rbs 2.8.1
+    * rbs 2.8.2
     * typeprof 0.21.3
-    * debug 1.7.0
+    * debug 1.7.1
+
+See GitHub releases like [GH-logger-releases] or changelog for details of the default gems or bundled gems.
 
 ## Supported platforms
 
@@ -592,9 +603,9 @@ The following deprecated methods are removed.
 ### Constant lookup when defining a class/module
 
 * When defining a class/module directly under the Object class by class/module
-  statement, if there is already a class/module with the same name, the statement
-  was handled as "open class" in Ruby 3.1 or before. Since Ruby 3.2, a new class
-  is defined instead. [[Feature #18832]]
+  statement, if there is already a class/module defined by `Module#include`
+  with the same name, the statement was handled as "open class" in Ruby 3.1 or before.
+  Since Ruby 3.2, a new class is defined instead. [[Feature #18832]]
 
 ## Stdlib compatibility issues
 
@@ -630,9 +641,9 @@ The following APIs are updated.
 
 * PRNG update
 
-    `rb_random_interface_t` updated and versioned.
-    Extension libraries which use this interface and built for older versions.
-    Also `init_int32` function needs to be defined.
+    `rb_random_interface_t` in ruby/random.h updated and versioned.
+    Extension libraries which use this interface and built for older
+    versions need to rebuild with adding `init_int32` function.
 
 ### Added C APIs
 
@@ -644,6 +655,7 @@ The following APIs are updated.
     * `RUBY_INTERNAL_THREAD_EVENT_RESUMED`
     * `RUBY_INTERNAL_THREAD_EVENT_SUSPENDED`
     * `RUBY_INTERNAL_THREAD_EVENT_EXITED`
+* `rb_debug_inspector_current_depth` `rb_debug_inspector_frame_depth` is added for debuggers.
 
 ### Removed C APIs
 
@@ -664,8 +676,8 @@ The following deprecated APIs are removed.
   [[Feature #18589]]
 * The cache-based optimization for Regexp matching is introduced.
   [[Feature #19104]]
-* Variable Width Allocation is now enabled by default.
-  [[Feature #18239]].
+* [Variable Width Allocation](https://shopify.engineering/ruby-variable-width-allocation)
+  is now enabled by default. [[Feature #18239]]
 * Added a new instance variable caching mechanism, called object shapes, which
   improves inline cache hits for most objects and allows us to generate very
   efficient JIT code. Objects whose instance variables are defined in a
@@ -705,7 +717,7 @@ The following deprecated APIs are removed.
 
 ### MJIT
 
-* The MJIT compiler is re-implemented in Ruby as a standard library `mjit`.
+* The MJIT compiler is re-implemented in Ruby as `ruby_vm/mjit/compiler`.
 * MJIT compiler is executed under a forked Ruby process instead of
   doing it in a native thread called MJIT worker. [[Feature #18968]]
     * As a result, Microsoft Visual Studio (MSWIN) is no longer supported.
@@ -793,9 +805,10 @@ The following deprecated APIs are removed.
 [GH-pathname-20]:     https://github.com/ruby/pathname/pull/20
 [GH-6791]:            https://github.com/ruby/ruby/pull/6791
 [GH-6868]:            https://github.com/ruby/ruby/pull/6868
-[GH-rubygems-5175]:   https://github.com/rubygems/rubygems/pull/6149
+[GH-rubygems-6149]:   https://github.com/rubygems/rubygems/pull/6149
 [sec-156615]:         https://hackerone.com/reports/156615
 [ruby-3-2-irb]:       https://st0012.dev/whats-new-in-ruby-3-2-irb
 [CVE-2021-33621]:     https://www.ruby-lang.org/en/news/2022/11/22/http-response-splitting-in-cgi-cve-2021-33621/
 [wasm/README.md]:     https://github.com/ruby/ruby/blob/master/wasm/README.md
 [ruby.wasm]:          https://github.com/ruby/ruby.wasm
+[GH-logger-releases]: https://github.com/ruby/logger/releases
