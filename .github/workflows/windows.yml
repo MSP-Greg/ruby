@@ -97,25 +97,16 @@ jobs:
           bundler: none
           windows-toolchain: none
 
-      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
-        with:
-          path: C:\vcpkg\downloads
-          key: ${{ runner.os }}-vcpkg-download-${{ env.OS_VER }}-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-vcpkg-download-${{ env.OS_VER }}-
-            ${{ runner.os }}-vcpkg-download-
-
-      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
-        with:
-          path: C:\vcpkg\installed
-          key: ${{ runner.os }}-vcpkg-installed-${{ env.OS_VER }}-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-vcpkg-installed-${{ env.OS_VER }}-
-            ${{ runner.os }}-vcpkg-installed-
-
       - name: Install libraries with vcpkg
         run: |
-          vcpkg --triplet x64-windows install gmp libffi libyaml openssl zlib
+          cd $env:VCPKG_INSTALLATION_ROOT
+          $uri = "https://github.com/ruby/setup-msys2-gcc/releases/download/msys2-gcc-pkgs/mswin.7z"
+          curl -L $uri -o $env:RUNNER_TEMP/mswin_temp.7z
+          &"C:\Program Files\7-Zip\7z" x $env:RUNNER_TEMP/mswin_temp.7z -aoa
+          echo "`n———————————— ./vcpkg list ————————————"
+          ./vcpkg list
+        shell: pwsh
+        timeout-minutes: 5
 
       - name: Install libraries with scoop
         run: |
