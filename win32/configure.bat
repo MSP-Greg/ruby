@@ -248,8 +248,8 @@ goto :loop ;
   for %%I in (%opt:;= %) do (
     set d=%%I
     call pushd %%d:/=\%% && (
-      call set XINCFLAGS=%%XINCFLAGS%% -I%%CD:\=/%%/include
-      call set XLDFLAGS=%%XLDFLAGS%% -libpath:%%CD:\=/%%/lib
+      call set XINCFLAGS=%%XINCFLAGS%% -I%CD:\=/%/include
+      call set XLDFLAGS=%%XLDFLAGS%% -libpath:%CD:\=/%%/lib
       popd
     )
   )
