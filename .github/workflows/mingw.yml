@@ -67,10 +67,10 @@ jobs:
 
     steps:
       - name: Set up Ruby & MSYS2
-        uses: ruby/setup-ruby@d8d83c3960843afb664e821fed6be52f37da5267 # v1.231.0
+        uses: ruby/setup-ruby-pkgs@v1
         with:
           ruby-version: ${{ matrix.baseruby }}
-
+          mingw: gcc-libs gcc
       - name: Misc system & package info
         working-directory:
         run: |
